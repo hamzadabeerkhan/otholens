@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: ./services/api
+      target: runtime
+    environment:
+      ORTHOLENS_ALLOWED_ORIGINS: ${ORTHOLENS_ALLOWED_ORIGINS:-http://localhost:3000}
+      ORTHOLENS_MAX_UPLOAD_BYTES: ${ORTHOLENS_MAX_UPLOAD_BYTES:-10485760}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  web:
+    build:
+      context: ./apps/web
+      target: runtime
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api-tests:
+    profiles: ["test"]
+    build:
+      context: ./services/api
+      target: test
+    command: ["pytest", "-q"]
+
