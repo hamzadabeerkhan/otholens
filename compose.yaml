@@ -36,3 +36,12 @@ services:
       target: test
     command: ["pytest", "-q"]
 
+  training:
+    profiles: ["training"]
+    build:
+      context: .
+      dockerfile: ml/training/Dockerfile
+    volumes:
+      - ./data:/app/data:ro
+      - ./artifacts:/app/artifacts
+    command: ["--epochs", "10"]
