@@ -7,7 +7,8 @@ type Result = {
   research_only: true;
   input: { sha256: string; format: string; original_width: number; original_height: number };
   pipeline_version: string;
-  prediction: { model_version: string; selected_kl_grade: number; probabilities: Record<string, number>; uncertainty: number };
+  status: "completed" | "abstained";
+  prediction: { model_version: string; selected_kl_grade: number | null; probabilities: Record<string, number>; uncertainty: number };
   warnings: { code: string; message: string }[];
 };
 
@@ -64,7 +65,7 @@ export default function Home() {
               {preview ? <img src={preview} alt="Selected radiograph preview" /> : <span>Select a knee radiograph</span>}
               <input type="file" accept="image/png,image/jpeg" onChange={chooseFile} />
             </label>
-            <div className="file-row"><span>{file?.name ?? "No file selected"}</span><button disabled={!file || loading}>{loading ? "Processing…" : "Run placeholder analysis"}</button></div>
+            <div className="file-row"><span>{file?.name ?? "No file selected"}</span><button disabled={!file || loading}>{loading ? "Processing…" : "Run research analysis"}</button></div>
           </form>
         </section>
         <section className="panel results">
@@ -72,7 +73,7 @@ export default function Home() {
           {!result && !error && <p className="empty">A structured result will appear here after validation.</p>}
           {error && <p className="error">{error}</p>}
           {result && <>
-            <div className="grade"><span>Placeholder KL grade</span><strong>{result.prediction.selected_kl_grade}</strong><small>Uncertainty {(result.prediction.uncertainty * 100).toFixed(0)}%</small></div>
+            <div className="grade"><span>{result.status === "abstained" ? "No KL grade reported" : "KL grade estimate"}</span><strong>{result.prediction.selected_kl_grade ?? "—"}</strong><small>Uncertainty {(result.prediction.uncertainty * 100).toFixed(0)}%</small></div>
             <div className="bars">{Object.entries(result.prediction.probabilities).map(([grade, probability]) => <div className="bar" key={grade}><span>KL {grade}</span><div><i style={{ width: `${probability * 100}%` }} /></div><b>{(probability * 100).toFixed(0)}%</b></div>)}</div>
             <dl><div><dt>Study</dt><dd>{result.study_id}</dd></div><div><dt>Model</dt><dd>{result.prediction.model_version}</dd></div><div><dt>Pipeline</dt><dd>{result.pipeline_version}</dd></div></dl>
             {result.warnings.map(item => <p className="notice" key={item.code}>{item.message}</p>)}

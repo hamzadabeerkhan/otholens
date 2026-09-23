@@ -22,7 +22,7 @@ class InputSummary(BaseModel):
 
 class OaPrediction(BaseModel):
     model_version: str
-    selected_kl_grade: int = Field(ge=0, le=4)
+    selected_kl_grade: int | None = Field(default=None, ge=0, le=4)
     probabilities: dict[str, float]
     uncertainty: float = Field(ge=0, le=1)
 
@@ -30,11 +30,10 @@ class OaPrediction(BaseModel):
 class AnalysisResult(BaseModel):
     schema_version: Literal["1.0"] = "1.0"
     study_id: str
-    status: Literal["completed"] = "completed"
+    status: Literal["completed", "abstained"] = "completed"
     research_only: Literal[True] = True
     created_at: datetime
     input: InputSummary
     pipeline_version: str
     prediction: OaPrediction
     warnings: list[WarningItem]
-
